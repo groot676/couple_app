@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="page door">
+    <form method="post" action="/passcode" class="door-form" data-reveal>
+        <h1 class="door-title">{{ app_name }}</h1>
+        <input class="door-input" type="password" name="passcode" placeholder="the passcode"
+               autofocus autocomplete="current-password" aria-label="household passcode">
+        {% if error %}<p class="door-error">{{ error }}</p>{% endif %}
+        <button class="door-enter pressable" type="submit">enter</button>
+    </form>
+</div>
+{% endblock %}

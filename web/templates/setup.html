@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="page setup">
+    <header class="masthead" data-reveal>
+        <h1 class="aspiration">Your household</h1>
+        <p class="made-count">done once, together — editable any time</p>
+    </header>
+    <form method="post" action="/setup" class="setup-form">
+        <fieldset data-reveal>
+            <legend>one of you</legend>
+            <label>name <input name="p1_name" value="{{ s.p1_name or '' }}" autocomplete="off"></label>
+            <label>monthly income <input name="p1_income" type="number" inputmode="numeric" min="0" value="{{ s.p1_income if s.p1_income is not none else '' }}"></label>
+            <label>payday, day of month <input name="p1_payday" type="number" inputmode="numeric" min="1" max="31" value="{{ s.p1_payday if s.p1_payday is not none else '' }}"></label>
+            <input type="hidden" name="p1_sender_id" value="{{ s.p1_sender_id if s.p1_sender_id is not none else '' }}">
+        </fieldset>
+        <fieldset data-reveal>
+            <legend>the other</legend>
+            <label>name <input name="p2_name" value="{{ s.p2_name or '' }}" autocomplete="off"></label>
+            <label>monthly income <input name="p2_income" type="number" inputmode="numeric" min="0" value="{{ s.p2_income if s.p2_income is not none else '' }}"></label>
+            <label>payday, day of month <input name="p2_payday" type="number" inputmode="numeric" min="1" max="31" value="{{ s.p2_payday if s.p2_payday is not none else '' }}"></label>
+            <input type="hidden" name="p2_sender_id" value="{{ s.p2_sender_id if s.p2_sender_id is not none else '' }}">
+        </fieldset>
+        <fieldset data-reveal>
+            <legend>the home</legend>
+            <label>what running it costs, per month <input name="baseline" type="number" inputmode="numeric" min="0" value="{{ s.baseline if s.baseline is not none else '' }}"></label>
+            <label>currency
+                <select name="currency">
+                    {% for code, symbol in currencies.items() %}
+                    <option value="{{ code }}" {{ 'selected' if (s.currency_code or 'CZK') == code }}>{{ code }} · {{ symbol }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>timezone <input name="timezone" value="{{ default_tz }}"></label>
+        </fieldset>
+        <div class="setup-actions" data-reveal>
+            <button class="save pressable" type="submit">keep this</button>
+            <a class="quiet-link pressable" href="/">back</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

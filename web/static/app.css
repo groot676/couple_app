@@ -1,0 +1,436 @@
+/* Together — bone paper, ink, one ember. Depth from ink-weight and spacing only. */
+
+:root {
+    --paper: #F6F1E8;
+    --ink: #2A2521;
+    --ink-deep: #16120F;
+    --taupe: #8A8178;
+    --terra: #BE6E4B;
+    --hairline: rgba(42, 37, 33, 0.08);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --d-fast: 250ms;
+    --d-med: 400ms;
+    --d-slow: 450ms;
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Inter", -apple-system, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { background: var(--paper); }
+
+body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    animation: pagefade var(--d-fast) var(--ease);
+}
+
+@keyframes pagefade { from { opacity: 0; } }
+@view-transition { navigation: auto; }
+
+/* paper grain — almost subliminal, the surface as material */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.028;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: calc(env(safe-area-inset-top, 0px) + 2.2rem) 1.4rem
+             calc(env(safe-area-inset-bottom, 0px) + 3.5rem);
+}
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+
+/* touch: nothing feels dead under the finger */
+.pressable { transition: transform 120ms var(--ease), color 120ms var(--ease); }
+.pressable:active { transform: scale(0.98); color: var(--ink-deep); }
+
+/* --- masthead ---------------------------------------------------------- */
+
+.masthead { margin-bottom: 2.4rem; }
+
+.aspiration {
+    font-family: var(--serif);
+    font-weight: 460;
+    font-variation-settings: "opsz" 40;
+    font-size: clamp(1.65rem, 6.5vw, 2.15rem);
+    line-height: 1.14;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    max-width: 14em;
+}
+
+.made-count {
+    margin-top: 0.55rem;
+    font-size: 0.8rem;
+    color: var(--taupe);
+}
+
+/* --- setup invitation (pre-setup empty state) --------------------------- */
+
+.invite { margin: 0 0 2.6rem; }
+
+.invite-link { display: block; padding: 1.3rem 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+
+.invite-serif {
+    display: block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 440;
+    font-size: 1.2rem;
+    color: var(--ink);
+}
+
+.invite-sub { display: block; margin-top: 0.35rem; font-size: 0.78rem; color: var(--taupe); }
+
+/* --- items (shared) ------------------------------------------------------ */
+
+.item { border-bottom: 1px solid var(--hairline); overflow: hidden; }
+.item:last-child { border-bottom: none; }
+
+.item-row { display: flex; align-items: baseline; gap: 0.7rem; position: relative; }
+
+.item .initial {
+    font-size: 0.66rem;
+    color: var(--taupe);
+    opacity: 0.85;
+    min-width: 1em;
+    text-align: right;
+}
+
+/* inline reveal of quiet actions */
+.item-actions {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows var(--d-fast) var(--ease), opacity var(--d-fast) var(--ease);
+}
+.item.open .item-actions { grid-template-rows: 1fr; opacity: 1; }
+.actions-inner {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+    padding-bottom: 0.9rem;
+}
+
+.act { font-size: 0.8rem; color: var(--ink); border-bottom: 1px solid rgba(42, 37, 33, 0.25); padding: 0.05rem 0.05rem 0.15rem; }
+.act.quiet { color: var(--taupe); border-bottom-color: var(--hairline); }
+.act-label { font-size: 0.8rem; color: var(--taupe); }
+.act-cluster { display: inline-flex; align-items: baseline; gap: 0.55rem; }
+.done-act { font-weight: 560; letter-spacing: 0.02em; }
+
+.price-form { display: inline-flex; }
+.price-input {
+    font: inherit; font-size: 0.8rem;
+    width: 6.2em;
+    color: var(--ink);
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 0.05rem 0.05rem 0.15rem;
+    outline: none;
+}
+.price-input::placeholder { color: var(--taupe); opacity: 0.7; }
+.price-input:focus { border-bottom-color: rgba(42, 37, 33, 0.35); }
+
+/* --- dreams: serif, generous, breathing ---------------------------------- */
+
+.dreams { margin-bottom: 2.6rem; }
+
+.dream .item-row { padding: 1.05rem 0; }
+
+.dream .text {
+    font-family: var(--serif);
+    font-weight: 450;
+    font-variation-settings: "opsz" 22;
+    font-size: 1.22rem;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.dream .right { margin-left: auto; display: inline-flex; align-items: baseline; gap: 0.5rem; white-space: nowrap; }
+
+.dream .price {
+    color: var(--terra);
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+/* the ember: the single most alive element on the resting screen */
+@keyframes ember { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+.ready-mark {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--terra);
+    align-self: center;
+}
+.dream.ready .price, .dream.ready .ready-mark { animation: ember 3s ease-in-out infinite; }
+
+/* hairline drawn under the text during the done ceremony — a pen stroke */
+.dream .item-row::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.45;
+    transform: scaleX(0);
+    transform-origin: left center;
+}
+.item.ceremony .text { color: var(--ink-deep); transition: color 200ms var(--ease); }
+.item.ceremony .item-row::after { transform: scaleX(1); transition: transform var(--d-med) var(--ease) 180ms; }
+.item.depart {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 300ms var(--ease) 0ms, transform 300ms var(--ease) 0ms;
+}
+
+/* starter dreams — outlined whispers that fill with ink when adopted */
+.starter { border-bottom: 1px solid var(--hairline); }
+.starter-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 1.05rem 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 430;
+    font-size: 1.22rem;
+    line-height: 1.3;
+    color: transparent;
+    -webkit-text-stroke: 0.6px rgba(138, 129, 120, 0.75);
+    transition: color var(--d-slow) var(--ease), -webkit-text-stroke-color var(--d-slow) var(--ease);
+}
+.starter-btn.adopting, .starter-btn:active {
+    color: var(--ink);
+    -webkit-text-stroke-color: transparent;
+}
+
+/* --- unsorted strip (LLM fallback) --------------------------------------- */
+
+.unsorted { margin: -1.2rem 0 2.4rem; }
+.unsorted summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--taupe);
+    padding: 0.4rem 0;
+}
+.unsorted summary::-webkit-details-marker { display: none; }
+.unsorted summary::before { content: "· "; }
+.unsorted-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 0.92rem;
+}
+.unsorted-item .place { display: inline-flex; gap: 0.8rem; white-space: nowrap; }
+
+/* --- threshold ------------------------------------------------------------ */
+
+.threshold {
+    border-top: 1px solid var(--hairline);
+    padding-top: 0.6rem;
+    margin-bottom: 0.4rem;
+}
+.threshold span {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+}
+
+/* --- everyday: compact, quiet, unceremonious ------------------------------ */
+
+.everyday { margin-bottom: 2.2rem; }
+
+.every .item-row { padding: 0.55rem 0; align-items: center; }
+.every .text { font-size: 0.95rem; flex: 1; position: relative; transition: opacity 300ms var(--ease); }
+
+/* strikethrough that draws itself */
+.every .text::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 55%;
+    height: 1px;
+    width: 0;
+    background: currentColor;
+    transition: width 300ms var(--ease) 100ms;
+}
+
+.dot {
+    width: 20px; height: 20px;
+    border: 1.5px solid rgba(42, 37, 33, 0.35);
+    border-radius: 50%;
+    position: relative;
+    flex: none;
+}
+.dot-fill {
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: scale(0);
+    transition: transform var(--d-fast) var(--ease);
+}
+.item.checking .dot-fill { transform: scale(1); }
+.item.checking .text { opacity: 0.4; }
+.item.checking .text::after { width: 100%; }
+
+.every-empty { font-size: 0.85rem; color: var(--taupe); padding: 0.5rem 0 0.8rem; }
+
+/* --- one faint line of financial reality ---------------------------------- */
+
+.pot-line { font-size: 0.82rem; color: var(--taupe); margin-bottom: 2rem; }
+.pot-num { color: var(--terra); font-variant-numeric: tabular-nums; }
+
+/* --- made real together (the quiet record) --------------------------------- */
+
+.made-real { margin-bottom: 2rem; }
+.made-real summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--taupe);
+    padding: 0.3rem 0;
+}
+.made-real summary::-webkit-details-marker { display: none; }
+.made-real li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--hairline);
+}
+.made-real li:last-child { border-bottom: none; }
+.mr-text { font-family: var(--serif); font-weight: 440; font-size: 1rem; color: var(--ink); opacity: 0.85; }
+.mr-date { font-size: 0.72rem; color: var(--taupe); white-space: nowrap; }
+
+/* --- footer ----------------------------------------------------------------- */
+
+.foot { padding-top: 1rem; }
+.quiet-link { font-size: 0.75rem; color: var(--taupe); border-bottom: 1px solid var(--hairline); padding-bottom: 0.1rem; }
+
+/* --- the door (passcode) ------------------------------------------------------ */
+
+.door { min-height: 92vh; display: flex; align-items: center; justify-content: center; }
+.door-form { width: 100%; max-width: 300px; text-align: center; }
+.door-title {
+    font-family: var(--serif);
+    font-weight: 460;
+    font-size: 1.9rem;
+    margin-bottom: 2.2rem;
+}
+.door-input {
+    display: block;
+    width: 100%;
+    font: inherit;
+    font-size: 1.05rem;
+    text-align: center;
+    color: var(--ink);
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(42, 37, 33, 0.3);
+    padding: 0.5rem 0.2rem;
+    outline: none;
+}
+.door-input::placeholder { color: var(--taupe); opacity: 0.65; }
+.door-input:focus { border-bottom-color: var(--ink); }
+.door-error { margin-top: 0.9rem; font-size: 0.8rem; color: var(--taupe); }
+.door-enter {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--taupe);
+}
+
+/* --- setup ---------------------------------------------------------------------- */
+
+.setup-form fieldset { border: none; padding: 1.4rem 0; border-top: 1px solid var(--hairline); }
+.setup-form legend {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    padding-top: 1.4rem;
+}
+.setup-form label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.88rem;
+    color: var(--ink);
+    padding: 0.55rem 0;
+}
+.setup-form input, .setup-form select {
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(42, 37, 33, 0.25);
+    padding: 0.15rem 0.1rem;
+    outline: none;
+    text-align: right;
+    width: 11em;
+    max-width: 55%;
+}
+.setup-form input:focus, .setup-form select:focus { border-bottom-color: var(--ink); }
+.setup-actions { display: flex; align-items: center; gap: 1.6rem; padding: 1.8rem 0; border-top: 1px solid var(--hairline); }
+.save {
+    font-size: 0.95rem;
+    font-weight: 560;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 0.65rem 1.5rem;
+    border-radius: 2px;
+}
+
+/* --- arrival: things settle onto the paper, they don't pop ---------------------- */
+
+html.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity var(--d-med) var(--ease) var(--d, 0ms),
+                transform var(--d-med) var(--ease) var(--d, 0ms);
+}
+html.js [data-reveal].settled { opacity: 1; transform: none; }
+
+/* presence breathes in a beat after its item */
+html.js [data-reveal] .initial {
+    opacity: 0;
+    transition: opacity 350ms var(--ease) calc(var(--d, 0ms) + 220ms);
+}
+html.js [data-reveal].settled .initial { opacity: 0.85; }
+
+/* --- reduced motion: everything, instantly, still ---------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+    html.js [data-reveal], html.js [data-reveal] .initial { opacity: 1; transform: none; }
+}

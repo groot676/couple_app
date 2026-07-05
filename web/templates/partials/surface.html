@@ -1,0 +1,121 @@
+<header class="masthead" data-reveal>
+    <h1 class="aspiration">The life you're making, together</h1>
+    {% if made_real_count %}
+    <p class="made-count" data-count="{{ made_real_count }}">{{ made_real_count }} thing{{ 's' if made_real_count != 1 }} made real so far</p>
+    {% endif %}
+</header>
+
+{% if not complete %}
+<section class="invite" data-reveal>
+    <a href="/setup" class="invite-link pressable">
+        <span class="invite-serif">Begin with your household</span>
+        <span class="invite-sub">names, incomes, paydays — once, together</span>
+    </a>
+</section>
+{% endif %}
+
+<section class="dreams">
+    {% if dreams %}
+    <ul class="dream-list">
+        {% for d in dreams %}
+        <li class="item dream{{ ' ready' if d.id in ready_ids }}" data-id="{{ d.id }}" data-reveal>
+            <div class="item-row pressable" data-toggle>
+                <span class="text">{{ d.display_text or d.text }}</span>
+                <span class="right">
+                    {% if d.id in ready_ids %}<span class="ready-mark" aria-label="ready this month"></span>{% endif %}
+                    {% if d.estimated_price %}<span class="price">{{ money(d.estimated_price) }}</span>{% endif %}
+                </span>
+                {% if initial_for(d) %}<span class="initial">{{ initial_for(d) }}</span>{% endif %}
+            </div>
+            <div class="item-actions"><div class="actions-inner">
+                <span class="act-cluster">
+                    <span class="act-label">made real ·</span>
+                    {% if p1_initial and p2_initial %}
+                    <button class="act done-act pressable" data-done data-id="{{ d.id }}" data-by="p1">{{ p1_initial }}</button>
+                    <button class="act done-act pressable" data-done data-id="{{ d.id }}" data-by="p2">{{ p2_initial }}</button>
+                    {% else %}
+                    <button class="act done-act pressable" data-done data-id="{{ d.id }}" data-by="">yes</button>
+                    {% endif %}
+                </span>
+                <form class="price-form" hx-post="/item/{{ d.id }}/price" hx-target="#surface" hx-swap="innerHTML">
+                    <input class="price-input" name="price" type="number" inputmode="numeric" min="0"
+                           placeholder="{{ d.estimated_price or 'price' }}" aria-label="fix the price">
+                </form>
+                <button class="act quiet pressable" hx-post="/item/{{ d.id }}/remove" hx-target="#surface" hx-swap="innerHTML">let it go</button>
+            </div></div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <ul class="dream-list starters">
+        {% for s in starters %}
+        <li class="item dream starter" data-reveal>
+            <button class="starter-btn pressable" data-adopt data-text="{{ s }}">{{ s }}</button>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+
+{% if unsorted %}
+<details class="unsorted" data-reveal>
+    <summary class="pressable">{{ unsorted|length }} thing{{ 's' if unsorted|length != 1 }} waiting to be sorted</summary>
+    <ul>
+        {% for u in unsorted %}
+        <li class="unsorted-item" data-id="{{ u.id }}">
+            <span class="text">{{ u.text }}</span>
+            <span class="place">
+                <button class="act pressable" hx-post="/item/{{ u.id }}/lane" hx-vals='{"lane":"dream"}' hx-target="#surface" hx-swap="innerHTML">dream</button>
+                <button class="act pressable" hx-post="/item/{{ u.id }}/lane" hx-vals='{"lane":"everyday"}' hx-target="#surface" hx-swap="innerHTML">everyday</button>
+                <button class="act quiet pressable" hx-post="/item/{{ u.id }}/remove" hx-target="#surface" hx-swap="innerHTML">remove</button>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+</details>
+{% endif %}
+
+<div class="threshold" data-reveal><span>Everyday</span></div>
+
+<section class="everyday">
+    {% if everyday %}
+    <ul class="every-list">
+        {% for e in everyday %}
+        <li class="item every" data-id="{{ e.id }}" data-reveal>
+            <div class="item-row">
+                <button class="dot pressable" data-check data-id="{{ e.id }}" aria-label="got it"><span class="dot-fill"></span></button>
+                <span class="text pressable" data-toggle>{{ e.display_text or e.text }}</span>
+                {% if initial_for(e) %}<span class="initial">{{ initial_for(e) }}</span>{% endif %}
+            </div>
+            <div class="item-actions"><div class="actions-inner">
+                <button class="act quiet pressable" hx-post="/item/{{ e.id }}/remove" hx-target="#surface" hx-swap="innerHTML">remove</button>
+            </div></div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="every-empty" data-reveal>nothing needed right now</p>
+    {% endif %}
+</section>
+
+{% if pot is not none %}
+<p class="pot-line" data-reveal>
+    <span class="pot-num" data-pot="{{ pot }}" data-code="{{ currency_code }}" data-symbol="{{ currency_symbol }}">{{ money(pot) }}</span>
+    <span class="pot-rest"> in the pot{% if next_days is not none %} · next pot in {{ next_days }} day{{ 's' if next_days != 1 }}{% endif %}</span>
+</p>
+{% elif pot_pending_days is not none %}
+<p class="pot-line" data-reveal>
+    <span class="pot-rest">your first pot arrives in {{ pot_pending_days }} day{{ 's' if pot_pending_days != 1 }}</span>
+</p>
+{% endif %}
+
+{% if made_real %}
+<details class="made-real" data-reveal>
+    <summary class="pressable">made real together</summary>
+    <ul>
+        {% for m in made_real %}
+        <li><span class="mr-text">{{ m.display_text or m.text }}</span><span class="mr-date">{{ made_date(m) }}</span></li>
+        {% endfor %}
+    </ul>
+</details>
+{% endif %}
