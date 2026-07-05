@@ -226,6 +226,16 @@ def index(request: Request):
     return templates.TemplateResponse(request, "index.html", _surface_context())
 
 
+# The same surface, served without a manifest link. On Android Chrome an
+# installable page hides the plain "Add to Home screen" shortcut option;
+# this address brings it back for phones whose WebAPK minting is broken.
+@app.get("/go", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
+def index_shortcut(request: Request):
+    ctx = _surface_context()
+    ctx["hide_manifest"] = True
+    return templates.TemplateResponse(request, "index.html", ctx)
+
+
 @app.get("/surface", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
 def surface(request: Request):
     return _surface(request)
