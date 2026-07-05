@@ -136,7 +136,22 @@ def _surface(request: Request) -> HTMLResponse:
 # a service worker can never control paths above its own URL.
 @app.get("/sw.js", include_in_schema=False)
 def service_worker():
-    return FileResponse(BASE_DIR / "static" / "sw.js", media_type="application/javascript")
+    return FileResponse(
+        BASE_DIR / "static" / "sw.js",
+        media_type="application/javascript",
+        headers={"Cache-Control": "no-cache"},
+    )
+
+
+# Root route with no-cache: a stale cached manifest silently breaks Android's
+# install (the app-minting step reads it) — never let a browser hold an old copy.
+@app.get("/manifest.json", include_in_schema=False)
+def manifest():
+    return FileResponse(
+        BASE_DIR / "static" / "manifest.json",
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 # Unauthenticated on purpose: reveals nothing private, and install problems
@@ -144,7 +159,7 @@ def service_worker():
 _PWA_CHECK = """<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>pwa check</title>
-<link rel="manifest" href="/static/manifest.json">
+<link rel="manifest" href="/manifest.json">
 <style>body{font:16px/1.6 monospace;background:#F6F1E8;color:#2A2521;padding:1.2rem}</style>
 </head><body><h3>install diagnostics</h3><pre id="o">running…</pre>
 <script>
@@ -160,7 +175,7 @@ else {
     .then(function(r){ line("sw active", !!r.active); })
     .catch(function(e){ line("sw ERROR", e); });
 }
-fetch("/static/manifest.json").then(function(r){ return r.json(); })
+fetch("/manifest.json", {cache: "no-store"}).then(function(r){ return r.json(); })
   .then(function(m){ line("manifest", "ok — id " + m.id + ", icons " + m.icons.length); })
   .catch(function(e){ line("manifest ERROR", e); });
 var fired = false;
