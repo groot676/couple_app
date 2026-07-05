@@ -3,7 +3,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -130,6 +130,13 @@ def _surface_context() -> dict:
 
 def _surface(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "partials/surface.html", _surface_context())
+
+
+# Served from the root (not /static/) so its scope can cover the whole app —
+# a service worker can never control paths above its own URL.
+@app.get("/sw.js", include_in_schema=False)
+def service_worker():
+    return FileResponse(BASE_DIR / "static" / "sw.js", media_type="application/javascript")
 
 
 # --- the door -------------------------------------------------------------------

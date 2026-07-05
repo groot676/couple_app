@@ -1,7 +1,9 @@
 {
+  "id": "/",
   "name": "Together",
   "short_name": "Together",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F6F1E8",
   "theme_color": "#F6F1E8",
