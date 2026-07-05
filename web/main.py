@@ -139,6 +139,42 @@ def service_worker():
     return FileResponse(BASE_DIR / "static" / "sw.js", media_type="application/javascript")
 
 
+# Unauthenticated on purpose: reveals nothing private, and install problems
+# usually mean the phone can't get past the door anyway.
+_PWA_CHECK = """<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pwa check</title>
+<link rel="manifest" href="/static/manifest.json">
+<style>body{font:16px/1.6 monospace;background:#F6F1E8;color:#2A2521;padding:1.2rem}</style>
+</head><body><h3>install diagnostics</h3><pre id="o">running…</pre>
+<script>
+var out = [];
+function line(k, v) { out.push(k + ": " + v); document.getElementById("o").textContent = out.join("\\n"); }
+line("browser", navigator.userAgent.match(/Chrome\\/[\\d.]+|Safari\\/[\\d.]+|wv/g) || navigator.userAgent);
+line("in-app webview", /\\bwv\\b/.test(navigator.userAgent) ? "YES — install cannot work here" : "no");
+line("secure context", window.isSecureContext);
+line("display mode", ["standalone","minimal-ui","fullscreen","browser"].find(function(m){return matchMedia("(display-mode: "+m+")").matches}));
+if (!("serviceWorker" in navigator)) { line("service worker", "UNSUPPORTED — likely an in-app browser"); }
+else {
+  navigator.serviceWorker.register("/sw.js").then(function(r){ line("service worker", "registered, scope " + r.scope); return navigator.serviceWorker.ready; })
+    .then(function(r){ line("sw active", !!r.active); })
+    .catch(function(e){ line("sw ERROR", e); });
+}
+fetch("/static/manifest.json").then(function(r){ return r.json(); })
+  .then(function(m){ line("manifest", "ok — id " + m.id + ", icons " + m.icons.length); })
+  .catch(function(e){ line("manifest ERROR", e); });
+var fired = false;
+addEventListener("beforeinstallprompt", function(){ fired = true; line("installable", "YES — Chrome says criteria met"); });
+setTimeout(function(){ if (!fired) line("installable", "no signal after 6s (already installed? in-app browser? criteria unmet?)"); }, 6000);
+if (navigator.getInstalledRelatedApps) navigator.getInstalledRelatedApps().then(function(a){ line("already installed here", a.length ? "YES" : "not detected"); });
+</script></body></html>"""
+
+
+@app.get("/pwa-check", response_class=HTMLResponse, include_in_schema=False)
+def pwa_check():
+    return HTMLResponse(_PWA_CHECK)
+
+
 # --- the door -------------------------------------------------------------------
 
 @app.get("/passcode", response_class=HTMLResponse)
