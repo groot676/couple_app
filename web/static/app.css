@@ -408,6 +408,70 @@ ul { list-style: none; }
     border-radius: 2px;
 }
 
+/* --- the capture bar: quiet, utilitarian, always at your thumb ------------------ */
+
+.page.has-capture { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 7.5rem); }
+
+.capture-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 5;                     /* under the grain (10), above the page */
+    background: var(--paper);
+    border-top: 1px solid var(--hairline);
+}
+.capture-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0.5rem 1.4rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+}
+
+#capture-form { display: flex; align-items: center; gap: 0.7rem; }
+#capture-input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0.45rem 0;
+}
+#capture-input::placeholder { color: var(--taupe); opacity: 0.6; }
+.capture-send {
+    flex: none;
+    width: 30px; height: 30px;
+    border: 1px solid rgba(42, 37, 33, 0.3);
+    border-radius: 50%;
+    color: var(--ink);
+    font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* who's this? — chosen once per device */
+.who-pick { display: flex; align-items: baseline; gap: 1.2rem; padding: 0.65rem 0 0.75rem; }
+.who-label { font-size: 0.8rem; color: var(--taupe); }
+
+/* the one-shot confirmation: settles in, dismisses itself */
+#capture-note .note { padding: 0.15rem 0 0.45rem; }
+.note-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.78rem;
+    color: var(--taupe);
+    padding: 0.18rem 0;
+}
+.note-text { min-width: 0; }
+.note-price { color: var(--terra); }
+.note-line .act { white-space: nowrap; font-size: 0.75rem; }
+#capture-note .note.note-fade {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 300ms var(--ease), transform 300ms var(--ease);
+}
+
 /* --- arrival: things settle onto the paper, they don't pop ---------------------- */
 
 html.js [data-reveal] {

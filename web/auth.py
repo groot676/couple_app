@@ -10,6 +10,11 @@ from shared.config import APP_PASSCODE, APP_SECRET
 COOKIE_NAME = "together_door"
 COOKIE_MAX_AGE = 180 * 24 * 3600  # 180 days
 
+# Per-device identity for capture attribution — presence, not security.
+# Both partners live behind the same passcode; this only picks the initial.
+WHO_COOKIE = "together_who"
+WHO_MAX_AGE = 365 * 24 * 3600
+
 
 class NotAuthed(Exception):
     pass

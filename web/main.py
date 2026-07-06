@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -14,15 +15,20 @@ from shared.config import (
     DEFAULT_CURRENCY_SYMBOL,
     DEFAULT_TIMEZONE,
 )
+from shared.sorter import SorterError, sort_message
 from .auth import (
     COOKIE_MAX_AGE,
     COOKIE_NAME,
+    WHO_COOKIE,
+    WHO_MAX_AGE,
     NotAuthed,
     check_passcode,
     make_token,
     require_auth,
     verify_token,
 )
+
+logger = logging.getLogger("web")
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -84,10 +90,12 @@ def _surface_context() -> dict:
     def initial_for(item: dict) -> str:
         sid = item.get("sender_id")
         if not sid:
-            return ""  # starter dreams carry no presence
-        if sid == settings.get("p1_sender_id"):
+            return ""  # starter dreams and anonymous web captures carry no presence
+        # -1/-2 are synthetic web-capture ids used when a partner has no
+        # telegram sender_id mapped yet.
+        if sid == settings.get("p1_sender_id") or sid == -1:
             return p1_initial or (item.get("sender_name") or "")[:1].upper()
-        if sid == settings.get("p2_sender_id"):
+        if sid == settings.get("p2_sender_id") or sid == -2:
             return p2_initial or (item.get("sender_name") or "")[:1].upper()
         return (item.get("sender_name") or "")[:1].upper()
 
@@ -130,6 +138,36 @@ def _surface_context() -> dict:
 
 def _surface(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "partials/surface.html", _surface_context())
+
+
+# --- capture attribution --------------------------------------------------------
+
+def _who(request: Request) -> str | None:
+    w = request.cookies.get(WHO_COOKIE, "")
+    return w if w in ("p1", "p2") else None
+
+
+def _web_sender(who: str | None, settings: dict) -> tuple[int, str]:
+    """(sender_id, sender_name) for an in-app capture. Reuses the partner's
+    telegram sender_id so presence initials work unchanged; falls back to
+    synthetic -1/-2 when no telegram mapping exists yet."""
+    if who == "p1":
+        return settings.get("p1_sender_id") or -1, settings.get("p1_name") or "web"
+    if who == "p2":
+        return settings.get("p2_sender_id") or -2, settings.get("p2_name") or "web"
+    return 0, "web"
+
+
+def _capture_response(request: Request, item_ids: list[int], fallback: bool) -> HTMLResponse:
+    """The one-shot confirmation strip + an out-of-band refresh of the surface,
+    so the captured thought visibly settles into its place."""
+    ctx = _surface_context()
+    ctx["who"] = _who(request)
+    items = [db.get_item(i) for i in item_ids]
+    ctx["note_items"] = [i for i in items if i and i["status"] == "active"]
+    ctx["note_fallback"] = fallback
+    ctx["group_ids"] = ",".join(str(i) for i in item_ids)
+    return templates.TemplateResponse(request, "partials/capture_response.html", ctx)
 
 
 # Served from the root (not /static/) so its scope can cover the whole app —
@@ -223,7 +261,9 @@ def passcode_submit(request: Request, passcode: str = Form("")):
 
 @app.get("/", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
 def index(request: Request):
-    return templates.TemplateResponse(request, "index.html", _surface_context())
+    ctx = _surface_context()
+    ctx["who"] = _who(request)
+    return templates.TemplateResponse(request, "index.html", ctx)
 
 
 # The same surface, served without a manifest link. On Android Chrome an
@@ -232,8 +272,75 @@ def index(request: Request):
 @app.get("/go", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
 def index_shortcut(request: Request):
     ctx = _surface_context()
+    ctx["who"] = _who(request)
     ctx["hide_manifest"] = True
     return templates.TemplateResponse(request, "index.html", ctx)
+
+
+# --- in-app capture: the same pipeline the bot uses --------------------------------
+
+@app.post("/capture", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
+async def capture(request: Request, thought: str = Form("")):
+    text = thought.strip()
+    if not text:
+        return _capture_response(request, [], fallback=False)
+
+    settings = db.get_settings() or {}
+    sid, sname = _web_sender(_who(request), settings)
+    code = settings.get("currency_code") or DEFAULT_CURRENCY_CODE
+
+    ids: list[int] = []
+    fallback = False
+    try:
+        outcome = await sort_message(text, currency=code)
+        if outcome.items:
+            for it in outcome.items:
+                ids.append(db.add_item(
+                    text, sname, sid, 0,
+                    lane=it.lane, display_text=it.display_text,
+                    estimated_price=it.estimated_price, priority=it.priority,
+                    llm_raw=outcome.raw,
+                ))
+        else:
+            # A capture field has no bystander chatter — typing here is
+            # deliberate. "No items" still saves, as unsorted.
+            fallback = True
+            ids.append(db.add_item(text, sname, sid, 0, llm_raw=outcome.raw))
+        logger.info("capture: %d item(s) by %s%s", len(ids), sname, " (unsorted)" if fallback else "")
+    except SorterError as exc:
+        # Capture must NEVER fail because of the LLM — same guarantee as the bot.
+        logger.warning("capture: sorter failed, saving raw: %s", exc)
+        fallback = True
+        ids.append(db.add_item(text, sname, sid, 0))
+    return _capture_response(request, ids, fallback)
+
+
+@app.post("/capture/flip/{item_id}", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
+def capture_flip(request: Request, item_id: int, group: str = Form("")):
+    item = db.get_item(item_id)
+    if item and item["status"] == "active" and item["lane"] in ("dream", "everyday"):
+        new = "everyday" if item["lane"] == "dream" else "dream"
+        db.set_lane(item_id, new)
+        settings = db.get_settings() or {}
+        sid, _ = _web_sender(_who(request), settings)
+        # Same learning signal the bot records: guess, correction, who, when.
+        db.add_overrule(item_id, "lane", item["lane"], new, "web", sid or None)
+        logger.info("overrule: item=%s %s→%s (web)", item_id, item["lane"], new)
+    ids = [int(x) for x in group.split(",") if x.strip().lstrip("-").isdigit()]
+    return _capture_response(request, ids, fallback=False)
+
+
+@app.post("/whoami", response_class=HTMLResponse, dependencies=[Depends(require_auth)])
+def whoami(request: Request, who: str = Form(...)):
+    ctx = _surface_context()
+    ctx["who"] = who if who in ("p1", "p2") else None
+    response = templates.TemplateResponse(request, "partials/capture_bar.html", ctx)
+    if ctx["who"]:
+        response.set_cookie(
+            WHO_COOKIE, ctx["who"],
+            max_age=WHO_MAX_AGE, httponly=True, secure=True, samesite="lax",
+        )
+    return response
 
 
 @app.get("/surface", response_class=HTMLResponse, dependencies=[Depends(require_auth)])

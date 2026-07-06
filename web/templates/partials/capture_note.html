@@ -1,0 +1,20 @@
+{% if note_items %}
+<div class="note" data-note>
+    {% for it in note_items %}
+    <div class="note-line" data-reveal>
+        <span class="note-text">
+            {{ it.display_text or it.text }}
+            {%- if it.lane == 'dream' %} → your dreams{% if it.estimated_price %} · <span class="note-price">{{ money(it.estimated_price) }}</span>{% endif %}
+            {%- elif it.lane == 'everyday' %} → everyday
+            {%- else %} → kept aside to sort
+            {%- endif %}
+        </span>
+        {% if it.lane in ('dream', 'everyday') %}
+        <button class="act quiet pressable" hx-post="/capture/flip/{{ it.id }}"
+                hx-vals='{"group": "{{ group_ids }}"}'
+                hx-target="#capture-note" hx-swap="innerHTML">make it {{ 'everyday' if it.lane == 'dream' else 'a dream' }}?</button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

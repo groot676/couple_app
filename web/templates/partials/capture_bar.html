@@ -1,0 +1,15 @@
+{% if who is none and p1_initial and p2_initial %}
+<div class="who-pick" data-reveal>
+    <span class="who-label">who's this?</span>
+    <button class="act pressable" hx-post="/whoami" hx-vals='{"who":"p1"}' hx-target="#capture-bar" hx-swap="innerHTML">{{ settings.p1_name }}</button>
+    <button class="act pressable" hx-post="/whoami" hx-vals='{"who":"p2"}' hx-target="#capture-bar" hx-swap="innerHTML">{{ settings.p2_name }}</button>
+</div>
+{% else %}
+<div id="capture-note" aria-live="polite"></div>
+<form id="capture-form" hx-post="/capture" hx-target="#capture-note" hx-swap="innerHTML" autocomplete="off">
+    <input id="capture-input" name="thought" placeholder="drop a thought"
+           autocomplete="off" enterkeyhint="send" maxlength="500" required
+           aria-label="capture a thought">
+    <button class="capture-send pressable" type="submit" aria-label="capture">↑</button>
+</form>
+{% endif %}

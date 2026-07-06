@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 {% block body %}
-<div class="page">
+<div class="page has-capture">
     <main id="surface" hx-get="/surface" hx-trigger="every 25s, refresh" hx-swap="innerHTML">
         {% include "partials/surface.html" %}
     </main>
     <footer class="foot" data-reveal>
         <a class="quiet-link pressable" href="/setup">household</a>
     </footer>
+</div>
+<div class="capture-bar">
+    <div class="capture-inner" id="capture-bar">
+        {% include "partials/capture_bar.html" %}
+    </div>
 </div>
 {% endblock %}

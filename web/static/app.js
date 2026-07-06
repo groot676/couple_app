@@ -68,8 +68,24 @@
         }
     });
 
-    document.body.addEventListener("htmx:afterSwap", function (e) {
-        var scope = e.detail.target;
+    var noteTimer = null;
+
+    function onSwap(scope) {
+        if (!scope) return;
+
+        // the capture confirmation: settles in, then quietly dismisses itself
+        if (scope.id === "capture-note") {
+            settle(Array.prototype.slice.call(scope.querySelectorAll("[data-reveal]")), 60);
+            clearTimeout(noteTimer);
+            var note = scope.querySelector("[data-note]");
+            if (note) {
+                noteTimer = setTimeout(function () {
+                    note.classList.add("note-fade");
+                    setTimeout(function () { if (note.parentNode) note.parentNode.removeChild(note); }, 320);
+                }, 6000);
+            }
+            return;
+        }
 
         var fresh = [];
         scope.querySelectorAll("[data-reveal]").forEach(function (el) {
@@ -87,6 +103,19 @@
         if (counter && counter.dataset.count !== lastCount) {
             lastCount = counter.dataset.count;
             if (!reduced) counter.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, easing: "ease-out" });
+        }
+    }
+
+    document.body.addEventListener("htmx:afterSwap", function (e) { onSwap(e.detail.target); });
+    // out-of-band swaps: the surface refresh that rides along with a capture
+    document.body.addEventListener("htmx:oobAfterSwap", function (e) { onSwap(e.detail.target); });
+
+    // capture: the input clears the instant a thought is sent — never waits on the LLM
+    document.body.addEventListener("htmx:beforeRequest", function (e) {
+        var src = e.detail.elt;
+        if (src && src.id === "capture-form") {
+            var input = document.getElementById("capture-input");
+            if (input) setTimeout(function () { input.value = ""; input.focus(); }, 0);
         }
     });
 
