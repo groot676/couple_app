@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -32,6 +33,21 @@ logger = logging.getLogger("web")
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+def _asset_version() -> str:
+    """Changes every deploy — versioned asset URLs make stale phone caches
+    impossible (a cached old app.css once broke the capture bar on Android)."""
+    h = hashlib.md5()
+    for name in ("app.css", "app.js", "fonts/fonts.css", "htmx.min.js"):
+        try:
+            h.update(str((BASE_DIR / "static" / name).stat().st_mtime_ns).encode())
+        except OSError:
+            pass
+    return h.hexdigest()[:8]
+
+
+templates.env.globals["asset_v"] = _asset_version()
 
 CURRENCIES = {"CZK": "Kč", "EUR": "€", "USD": "$", "GBP": "£"}
 STARTERS = {

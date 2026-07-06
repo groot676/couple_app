@@ -425,27 +425,44 @@ ul { list-style: none; }
     padding: 0.5rem 1.4rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
 }
 
-#capture-form { display: flex; align-items: center; gap: 0.7rem; }
+/* the field: a hairline pill — unmistakably a tool, still quiet.
+   The whole bar is tappable (app.js focuses the input). */
+#capture-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 50px;                       /* comfortable thumb target */
+    padding: 0.2rem 0.35rem 0.2rem 1.05rem;
+    border: 1px solid rgba(42, 37, 33, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);  /* a breath lighter than the paper */
+}
 #capture-input {
     flex: 1;
     min-width: 0;
     font: inherit;
-    font-size: 0.95rem;
+    font-size: 1rem;                        /* ≥16px: iOS must not zoom on focus */
     color: var(--ink);
     background: none;
     border: none;
     outline: none;
-    padding: 0.45rem 0;
+    padding: 0.6rem 0;
 }
-#capture-input::placeholder { color: var(--taupe); opacity: 0.6; }
+#capture-input::placeholder { color: var(--taupe); opacity: 0.85; }
 .capture-send {
     flex: none;
-    width: 30px; height: 30px;
+    width: 38px; height: 38px;
     border: 1px solid rgba(42, 37, 33, 0.3);
     border-radius: 50%;
     color: var(--ink);
-    font-size: 0.9rem;
+    font-size: 1rem;
     display: flex; align-items: center; justify-content: center;
+}
+
+/* while the keyboard is up it replaces the home indicator — drop the inset,
+   and let the JS visual-viewport lift position the bar (iOS Safari) */
+.capture-bar.kb-open .capture-inner {
+    padding-bottom: 0.65rem;
 }
 
 /* who's this? — chosen once per device */

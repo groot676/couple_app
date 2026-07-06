@@ -209,6 +209,37 @@
         }
     });
 
+    // the whole bar is a tap target — anywhere that isn't a control focuses the input
+    document.body.addEventListener("click", function (e) {
+        if (e.target.closest(".capture-inner") &&
+            !e.target.closest("button, input, a, .note-line")) {
+            var input = document.getElementById("capture-input");
+            if (input) input.focus();
+        }
+    });
+
+    // keyboard: iOS Safari never resizes the layout viewport, so a fixed bar
+    // hides behind the keyboard. Track the visual viewport and lift the bar
+    // by exactly the covered height. (Android resizes the layout via the
+    // interactive-widget viewport hint, so the lift computes to ~0 there.)
+    (function () {
+        var vv = window.visualViewport;
+        if (!vv) return;
+        var raf = null;
+        function apply() {
+            raf = null;
+            var bar = document.querySelector(".capture-bar");
+            if (!bar) return;
+            var lift = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+            bar.style.transform = lift > 1 ? "translateY(-" + lift + "px)" : "";
+            bar.classList.toggle("kb-open", lift > 1);
+        }
+        function schedule() { if (!raf) raf = requestAnimationFrame(apply); }
+        vv.addEventListener("resize", schedule);
+        vv.addEventListener("scroll", schedule);
+        window.addEventListener("orientationchange", schedule);
+    })();
+
     // returning to the app refreshes the surface — new captures settle in
     document.addEventListener("visibilitychange", function () {
         if (!document.hidden && document.getElementById("surface") && window.htmx) {

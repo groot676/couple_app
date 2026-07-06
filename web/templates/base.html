@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <title>{{ app_name }}</title>
     <meta name="theme-color" content="#F6F1E8">
     {% if not hide_manifest %}<link rel="manifest" href="/manifest.json">{% endif %}
@@ -16,14 +16,14 @@
     <meta name="apple-mobile-web-app-title" content="{{ app_name }}">
     <link rel="preload" href="/static/fonts/fraunces-roman-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/static/fonts/inter-roman-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/static/fonts/fonts.css">
-    <link rel="stylesheet" href="/static/app.css">
+    <link rel="stylesheet" href="/static/fonts/fonts.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/app.css?v={{ asset_v }}">
     <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
 {% block body %}{% endblock %}
-<script src="/static/htmx.min.js" defer></script>
-<script src="/static/app.js" defer></script>
+<script src="/static/htmx.min.js?v={{ asset_v }}" defer></script>
+<script src="/static/app.js?v={{ asset_v }}" defer></script>
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js'); });
